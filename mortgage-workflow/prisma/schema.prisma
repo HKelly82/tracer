@@ -1,0 +1,301 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Case {
+  id                        String         @id @default(uuid())
+  clientName                String
+  caseType                  CaseType       @default(Remortgage)
+  status                    CaseStatus     @default(Active)
+  stage                     Stage          @default(Research)
+  stageVariant              StageVariant?
+  stageStartedAt            DateTime       @default(now())
+  stageDueAt                DateTime
+  lastActionAt              DateTime       @default(now())
+  researchCompletedAt       DateTime?
+  dipCompletedAt            DateTime?
+  applicationSubmittedAt    DateTime?
+  nbDueAt                   DateTime?
+  nbSubmittedAt             DateTime?
+  rateExpiryAt              DateTime?
+  offerExpiryAt             DateTime?
+  sharedCase                Boolean        @default(false)
+  createdAt                 DateTime       @default(now())
+  updatedAt                 DateTime       @updatedAt
+
+  illustrations             IllustrationSnapshot[]
+  offer                     OfferSnapshot?
+  suitabilityDraft          SuitabilityDraft?
+  asfDraft                  ASFDraft?
+  commission                Commission?
+  auditLog                  AuditLogEvent[]
+  documents                 Document[]
+}
+
+model Document {
+  id               String              @id @default(uuid())
+  caseId           String
+  case             Case                @relation(fields: [caseId], references: [id])
+  documentType     DocumentType
+  variant          IllustrationVariant?
+  uploadedAt       DateTime            @default(now())
+  originalFilename String
+  storagePath      String
+  parseStatus      ParseStatus         @default(Parsed)
+  parseVersion     String              @default("1.0")
+  extractedFields  ExtractedField[]
+}
+
+model ExtractedField {
+  id              String      @id @default(uuid())
+  documentId      String
+  document        Document    @relation(fields: [documentId], references: [id])
+  fieldKey        String
+  valueRaw        String
+  valueNormalized String
+  valueType       FieldType
+  source          FieldSource @default(Extracted)
+  sourcePage      Int?
+  confidence      Float?
+  confirmed       Boolean     @default(false)
+  confirmedAt     DateTime?
+  overridden      Boolean     @default(false)
+  overrideReason  String?
+  overriddenAt    DateTime?
+}
+
+model IllustrationSnapshot {
+  id                        String              @id @default(uuid())
+  caseId                    String
+  case                      Case                @relation(fields: [caseId], references: [id])
+  documentId                String              @unique
+  variant                   IllustrationVariant @default(None)
+  lenderName                String
+  productName               String
+  productCode               String?
+  loanPurpose               String?
+  repaymentMethod           RepaymentMethod     @default(Repayment)
+  loanAmount                Decimal
+  termYears                 Int
+  propertyValue             Decimal
+  ltvPercent                Decimal?
+  initialRatePercent        Decimal
+  initialRateEndDate        DateTime
+  reversionRatePercent      Decimal
+  monthlyPaymentInitial     Decimal
+  monthlyPaymentReversion   Decimal
+  aprcPercent               Decimal
+  totalAmountRepayable      Decimal
+  arrangementFeeAmount      Decimal             @default(0)
+  arrangementFeeAddedToLoan Boolean             @default(false)
+  brokerFeeAmount           Decimal             @default(0)
+  procFeeAmount             Decimal?
+  cashbackAmount            Decimal?
+  ercSummaryText            String?
+  portability               Boolean             @default(false)
+  overpaymentPercent        Decimal?
+  rateExpiryAt              DateTime?
+  confirmed                 Boolean             @default(false)
+  createdAt                 DateTime            @default(now())
+}
+
+model FeeDisclosureCalculation {
+  id                       String   @id @default(uuid())
+  caseId                   String   @unique
+  feeAddedAmount           Decimal
+  totalRepayableFeeAdded   Decimal
+  totalRepayableFeeUpfront Decimal
+  interestChargedOnFee     Decimal
+  calculatedAt             DateTime @default(now())
+}
+
+model OfferSnapshot {
+  id                       String          @id @default(uuid())
+  caseId                   String          @unique
+  case                     Case            @relation(fields: [caseId], references: [id])
+  documentId               String          @unique
+  offerExpiryAt            DateTime?
+  confirmedRatePercent     Decimal
+  confirmedLoanAmount      Decimal
+  confirmedTermYears       Int
+  confirmedRepaymentMethod RepaymentMethod
+  matchesIllustration      Boolean         @default(true)
+  mismatchFields           String[]
+  acknowledgedByUser       Boolean         @default(false)
+  acknowledgedAt           DateTime?
+  createdAt                DateTime        @default(now())
+}
+
+model SuitabilityDraft {
+  id                         String            @id @default(uuid())
+  caseId                     String            @unique
+  case                       Case              @relation(fields: [caseId], references: [id])
+  generatedAt                DateTime          @default(now())
+  templateVersion            String            @default("1.1")
+  objectiveCategory          ObjectiveCategory
+  objectiveNotes             String?
+  justificationMode          JustificationMode @default(Preset)
+  presetJustificationKey     String?
+  manualJustificationText    String?
+  affordabilitySummary       String
+  riskSummary                String
+  includeFeeAddedSection     Boolean           @default(false)
+  includeErcSection          Boolean           @default(true)
+  includePortabilitySection  Boolean           @default(false)
+  includeOverpaymentSection  Boolean           @default(false)
+  includeAlternativeProducts Boolean           @default(false)
+  inputHash                  String
+  staleDueToInputChange      Boolean           @default(false)
+  approvedByUser             Boolean           @default(false)
+  approvedAt                 DateTime?
+  generatedDocPath           String?
+}
+
+model ASFDraft {
+  id               String   @id @default(uuid())
+  caseId           String   @unique
+  case             Case     @relation(fields: [caseId], references: [id])
+  generatedAt      DateTime @default(now())
+  templateVersion  String   @default("1.0")
+  vulnerableClient Boolean  @default(false)
+  sourceOfBusiness String?
+  purposeOfLoan    String?
+  borrowerType     String?
+  accountNumber    String?
+  approvedByUser   Boolean  @default(false)
+  approvedAt       DateTime?
+  generatedDocPath String?
+}
+
+model Commission {
+  id                 String         @id @default(uuid())
+  caseId             String         @unique
+  case               Case           @relation(fields: [caseId], references: [id])
+  grossCommission    Decimal?
+  helenSplitPercent  Decimal        @default(100)
+  eileenSplitPercent Decimal        @default(0)
+  brokerFeeAmount    Decimal        @default(0)
+  feeWaived          Boolean        @default(false)
+  splitRuleApplied   CommissionRule @default(DefaultHelen100)
+}
+
+model AuditLogEvent {
+  id         String         @id @default(uuid())
+  caseId     String
+  case       Case           @relation(fields: [caseId], references: [id])
+  eventType  AuditEventType
+  entityType String?
+  entityId   String?
+  fieldKey   String?
+  oldValue   String?
+  newValue   String?
+  reason     String?
+  createdAt  DateTime       @default(now())
+}
+
+// ─── Enums ───────────────────────────────────────────────────
+
+enum CaseType {
+  FTB
+  HomeMover
+  Remortgage
+  BTL
+  ProductSwitch
+  Other
+}
+
+enum CaseStatus {
+  Active
+  Closed
+  Completed
+}
+
+enum Stage {
+  Research
+  ChaseClient
+  DIP
+  PostDIPChase
+  AwaitingNB
+  NBSubmitted
+  Closed
+  Completed
+}
+
+enum StageVariant {
+  PostDIPChase
+}
+
+enum DocumentType {
+  Illustration
+  Offer
+  Application
+  Other
+}
+
+enum IllustrationVariant {
+  FeeAdded
+  FeeUpfront
+  None
+}
+
+enum ParseStatus {
+  Parsed
+  Partial
+  Failed
+}
+
+enum FieldType {
+  String
+  Number
+  Date
+  Boolean
+}
+
+enum FieldSource {
+  Extracted
+  Manual
+}
+
+enum RepaymentMethod {
+  Repayment
+  InterestOnly
+  PartAndPart
+}
+
+enum ObjectiveCategory {
+  RateSecurity
+  ReducePayment
+  RaiseCapital
+  ShortenTerm
+  DebtConsolidation
+  ProductSwitch
+  Other
+}
+
+enum JustificationMode {
+  Preset
+  Manual
+}
+
+enum CommissionRule {
+  DefaultHelen100
+  Shared7030
+  ManualOverride
+}
+
+enum AuditEventType {
+  StageChanged
+  FieldConfirmed
+  FieldOverridden
+  DateOverridden
+  DraftGenerated
+  DraftRegenerated
+  OfferMismatchAcknowledged
+  CaseClosed
+  CaseReopened
+  CommissionOverridden
+}

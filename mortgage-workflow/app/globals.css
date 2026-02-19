@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Colour palette */
+  --color-primary: #4A90D9;
+  --color-surface: #FAFAF8;
+  --color-dashboard-neutral: #E8EDF5;
+  --color-alert: #E53E3E;
+  --color-warning: #DD6B20;
+  --color-success: #38A169;
+  --color-text-primary: #2D3748;
+  --color-text-muted: #A0AEC0;
+  --color-accent-warm: #F5F0E8;
+  --color-border: #E2E8F0;
+}
+
+/* Tabular numeric figures — used on all numeric data in tables */
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Success pulse — applied one-shot to a field row after confirmation/save */
+@keyframes successPulse {
+  0%   { background-color: #C6F6D5; }
+  100% { background-color: transparent; }
+}
+
+.success-pulse {
+  animation: successPulse 600ms ease-out forwards;
+}
