@@ -61,6 +61,18 @@ export async function PATCH(
     reason: reason.trim(),
   })
 
+  // Stale detection — mark SuitabilityDraft stale if one exists
+  const existingDraft = await prisma.suitabilityDraft.findUnique({
+    where: { caseId: snapshot.caseId },
+    select: { id: true, staleDueToInputChange: true },
+  })
+  if (existingDraft && !existingDraft.staleDueToInputChange) {
+    await prisma.suitabilityDraft.update({
+      where: { caseId: snapshot.caseId },
+      data: { staleDueToInputChange: true },
+    })
+  }
+
   return NextResponse.json({ ok: true })
 }
 

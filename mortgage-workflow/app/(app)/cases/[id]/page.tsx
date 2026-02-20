@@ -10,6 +10,7 @@ import LockedPanelState from "@/components/case/LockedPanelState"
 import StatusBadge from "@/components/ui/StatusBadge"
 import IllustrationPanel from "@/components/case/IllustrationPanel"
 import FeeComparisonPanel from "@/components/case/FeeComparisonPanel"
+import SuitabilityPanel from "@/components/case/SuitabilityPanel"
 import type { Stage } from "@/types"
 
 interface IllustrationRecord {
@@ -21,12 +22,30 @@ interface IllustrationRecord {
   totalAmountRepayable: string | number
   arrangementFeeAddedToLoan: boolean
   confirmed: boolean
+  portability: boolean
+  overpaymentPercent: number | null
 }
 
 interface FeeDisclosure {
   totalRepayableFeeAdded: number
   totalRepayableFeeUpfront: number
   interestChargedOnFee: number
+}
+
+interface SuitabilityDraftRecord {
+  id: string
+  objectiveCategory: string
+  objectiveNotes: string | null
+  justificationMode: string
+  presetJustificationKey: string | null
+  manualJustificationText: string | null
+  affordabilitySummary: string
+  riskSummary: string
+  includePortabilitySection: boolean
+  includeOverpaymentSection: boolean
+  includeAlternativeProducts: boolean
+  staleDueToInputChange: boolean
+  approvedByUser: boolean
 }
 
 interface CaseData {
@@ -38,6 +57,7 @@ interface CaseData {
   stageDueAt: string
   illustrations: IllustrationRecord[]
   feeDisclosure: FeeDisclosure | null
+  suitabilityDraft: SuitabilityDraftRecord | null
   auditLog: { id: string; eventType: string; createdAt: string; oldValue: string | null; newValue: string | null; reason: string | null }[]
 }
 
@@ -238,7 +258,13 @@ function CaseViewInner({ caseId }: { caseId: string }) {
                 isActive={isSuitabilityActive}
               >
                 {suitabilityEnabled ? (
-                  <p className="text-sm text-[#A0AEC0]">Suitability letter generation — available in Slice 4.</p>
+                  <SuitabilityPanel
+                    caseId={data.id}
+                    clientName={data.clientName}
+                    existingDraft={data.suitabilityDraft}
+                    illustrationSnapshot={primary ?? null}
+                    onRefresh={fetchCase}
+                  />
                 ) : (
                   <LockedPanelState message={lockMessage} />
                 )}
