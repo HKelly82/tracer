@@ -23,12 +23,6 @@ export async function GET(
   ])
 
   if (!draft) return NextResponse.json({ error: "No draft found" }, { status: 404 })
-  if (!draft.approvedByUser) {
-    return NextResponse.json({ error: "Draft must be approved before downloading" }, { status: 400 })
-  }
-  if (draft.staleDueToInputChange) {
-    return NextResponse.json({ error: "Draft is stale — regenerate before downloading" }, { status: 400 })
-  }
   if (!caseRecord) return NextResponse.json({ error: "Case not found" }, { status: 404 })
 
   const primary = caseRecord.illustrations.find(

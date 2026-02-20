@@ -98,8 +98,12 @@ export async function POST(
     // Extraction failed — proceed with null values
   }
 
-  const confirmedRepayment: "Repayment" | "InterestOnly" =
-    extractedRepayment === "InterestOnly" ? "InterestOnly" : "Repayment"
+  const confirmedRepayment: "Repayment" | "InterestOnly" | "PartAndPart" =
+    extractedRepayment === "InterestOnly"
+      ? "InterestOnly"
+      : extractedRepayment === "PartAndPart"
+        ? "PartAndPart"
+        : "Repayment"
 
   // Compare to illustration
   const mismatchFields: string[] = []

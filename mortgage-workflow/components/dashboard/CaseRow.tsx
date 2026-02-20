@@ -24,7 +24,18 @@ interface CaseRowProps {
 export default function CaseRow({ row, onChaseModal, onRefresh }: CaseRowProps) {
   const router = useRouter()
   const [confirmAction, setConfirmAction] = useState<string | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  async function handleDelete() {
+    setLoading(true)
+    try {
+      await fetch(`/api/cases/${row.id}`, { method: "DELETE" })
+      onRefresh()
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const stageDueAt = new Date(row.stageDueAt)
   const heatmap = getHeatmapBorder(stageDueAt, row.status)
@@ -101,18 +112,28 @@ export default function CaseRow({ row, onChaseModal, onRefresh }: CaseRowProps) 
           )}
         </td>
 
-        {/* Action button */}
+        {/* Action button + delete */}
         <td
           className="px-4 py-3 text-right"
           onClick={(e) => e.stopPropagation()}
         >
-          <button
-            disabled={loading}
-            onClick={handleActionClick}
-            className="px-3 py-1.5 text-xs font-medium bg-[#4A90D9] text-white rounded hover:bg-[#3a7bc8] transition-colors disabled:opacity-50"
-          >
-            {loading ? "…" : primaryAction.label}
-          </button>
+          <div className="flex items-center justify-end gap-2">
+            <button
+              disabled={loading}
+              onClick={handleActionClick}
+              className="px-3 py-1.5 text-xs font-medium bg-[#4A90D9] text-white rounded hover:bg-[#3a7bc8] transition-colors disabled:opacity-50"
+            >
+              {loading ? "…" : primaryAction.label}
+            </button>
+            <button
+              disabled={loading}
+              onClick={() => setShowDeleteConfirm(true)}
+              title="Remove from dashboard"
+              className="px-2 py-1.5 text-xs font-medium text-[#A0AEC0] border border-[#E2E8F0] rounded hover:text-[#E53E3E] hover:border-[#E53E3E] transition-colors disabled:opacity-50"
+            >
+              ×
+            </button>
+          </div>
         </td>
       </tr>
 
@@ -126,6 +147,24 @@ export default function CaseRow({ row, onChaseModal, onRefresh }: CaseRowProps) 
                 await runAction(confirmAction)
               }}
               onCancel={() => setConfirmAction(null)}
+            />
+          </td>
+        </tr>
+      )}
+
+      {showDeleteConfirm && (
+        <tr>
+          <td colSpan={6} className="p-0">
+            <ConfirmModal
+              title="Remove from dashboard?"
+              message={`${row.clientName} will be hidden from the dashboard. All data is retained and can be recovered.`}
+              confirmLabel="Remove"
+              danger
+              onConfirm={async () => {
+                setShowDeleteConfirm(false)
+                await handleDelete()
+              }}
+              onCancel={() => setShowDeleteConfirm(false)}
             />
           </td>
         </tr>

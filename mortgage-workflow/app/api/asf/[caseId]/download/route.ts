@@ -23,9 +23,6 @@ export async function GET(
   ])
 
   if (!draft) return NextResponse.json({ error: "No ASF draft found" }, { status: 404 })
-  if (!draft.approvedByUser) {
-    return NextResponse.json({ error: "ASF must be approved before downloading" }, { status: 400 })
-  }
   if (!caseRecord) return NextResponse.json({ error: "Case not found" }, { status: 404 })
   if (!commission) return NextResponse.json({ error: "Commission record not found" }, { status: 404 })
 

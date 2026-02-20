@@ -25,6 +25,10 @@ model Case {
   offerExpiryAt             DateTime?
   sharedCase                Boolean        @default(false)
   lateNbSubmission          Boolean        @default(false)
+  waitingOn                 WaitingOn      @default(Me)
+  leadSource                LeadSource     @default(Direct)
+  clientSummary             String?
+  feeArrangement            String?        @default("£200 advice + £150 admin")
   createdAt                 DateTime       @default(now())
   updatedAt                 DateTime       @updatedAt
 
@@ -35,6 +39,10 @@ model Case {
   commission                Commission?
   auditLog                  AuditLogEvent[]
   documents                 Document[]
+  tasks                     Task[]
+  notes                     Note[]
+  persons                   Person[]
+  documentChecks            DocumentCheck[]
 }
 
 model Document {
@@ -153,6 +161,7 @@ model SuitabilityDraft {
   staleDueToInputChange      Boolean           @default(false)
   approvedByUser             Boolean           @default(false)
   approvedAt                 DateTime?
+  markedComplete             Boolean           @default(false)
   generatedDocPath           String?
 }
 
@@ -169,6 +178,7 @@ model ASFDraft {
   accountNumber    String?
   approvedByUser   Boolean  @default(false)
   approvedAt       DateTime?
+  markedComplete   Boolean  @default(false)
   generatedDocPath String?
 }
 
@@ -198,6 +208,53 @@ model AuditLogEvent {
   createdAt  DateTime       @default(now())
 }
 
+model Task {
+  id          String     @id @default(uuid())
+  caseId      String
+  case        Case       @relation(fields: [caseId], references: [id])
+  title       String
+  dueDate     DateTime?
+  status      TaskStatus @default(Pending)
+  waitingOn   WaitingOn  @default(Me)
+  notes       String?
+  sortOrder   Int        @default(0)
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  caseId    String
+  case      Case     @relation(fields: [caseId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model Person {
+  id             String          @id @default(uuid())
+  caseId         String
+  case           Case            @relation(fields: [caseId], references: [id])
+  fullName       String
+  role           String          @default("Applicant")
+  sortOrder      Int             @default(0)
+  documentChecks DocumentCheck[]
+}
+
+model DocumentCheck {
+  id            String    @id @default(uuid())
+  caseId        String
+  case          Case      @relation(fields: [caseId], references: [id])
+  personId      String?
+  person        Person?   @relation(fields: [personId], references: [id])
+  documentName  String
+  required      Boolean   @default(true)
+  completed     Boolean   @default(false)
+  completedAt   DateTime?
+  monthsCovered String?
+  expiresAt     DateTime?
+  notes         String?
+}
+
 // ─── Enums ───────────────────────────────────────────────────
 
 enum CaseType {
@@ -216,12 +273,16 @@ enum CaseStatus {
 }
 
 enum Stage {
+  Lead
   Research
   ChaseClient
+  ClientResponse
   DIP
   PostDIPChase
   AwaitingNB
   NBSubmitted
+  LenderProcessing
+  Offered
   Closed
   Completed
 }
@@ -288,6 +349,25 @@ enum CommissionRule {
   ManualOverride
 }
 
+enum WaitingOn {
+  Me
+  Client
+  Lender
+  Passive
+}
+
+enum LeadSource {
+  Eileen
+  Direct
+}
+
+enum TaskStatus {
+  Pending
+  InProgress
+  Complete
+  Skipped
+}
+
 enum AuditEventType {
   StageChanged
   FieldConfirmed
@@ -299,4 +379,9 @@ enum AuditEventType {
   CaseClosed
   CaseReopened
   CommissionOverridden
+  TaskCompleted
+  TaskSkipped
+  NoteAdded
+  WaitingOnChanged
+  DocumentCheckCompleted
 }

@@ -1,5 +1,54 @@
 # Implementation Progress
 
+## V2 Slice 0 — Schema Migration + Bug Fixes
+
+**Status: COMPLETE** ✅
+**Date completed:** 2026-02-20
+
+---
+
+## What was built
+
+### Prisma Schema — V2 Extension
+- 3 new enums: `WaitingOn` (Me, Client, Lender, Passive), `LeadSource` (Eileen, Direct), `TaskStatus` (Pending, InProgress, Complete, Skipped)
+- 4 new Stage values: `Lead`, `ClientResponse`, `LenderProcessing`, `Offered` — additive, no v1 values removed
+- 5 new AuditEventType values: `TaskCompleted`, `TaskSkipped`, `NoteAdded`, `WaitingOnChanged`, `DocumentCheckCompleted`
+- 4 new fields on Case: `waitingOn`, `leadSource`, `clientSummary`, `feeArrangement`
+- `markedComplete` Boolean added to both `SuitabilityDraft` and `ASFDraft`
+- 4 new models: `Task`, `Note`, `Person`, `DocumentCheck`
+- Migration: `20260220210312_v2_schema_upgrade`
+
+### Bug Fixes
+- **PartAndPart repayment** (Audit_Report §3.4): `app/api/offer/[caseId]/route.ts` — added `PartAndPart` to type union instead of silently coercing to `Repayment`
+- **SL download approval gate** removed: `app/api/suitability/[caseId]/download/route.ts` — serves .docx regardless of `approvedByUser`
+- **ASF download approval gate** removed: `app/api/asf/[caseId]/download/route.ts` — same pattern
+- **staleDueToInputChange** (Audit_Report §3.3): Verified already implemented in v1 Slice 4 — field override route sets stale flag correctly (lines 65-74)
+- **.env.txt** (Audit_Report §4.1): Verified `.env*` in `.gitignore`, never committed to git history
+
+### Seed Script Update
+- Existing 3 cases updated with `waitingOn`, `leadSource`, `clientSummary`, `feeArrangement`
+- 2 new cases added: `Lead` stage (Eileen referral) and `ClientResponse` stage (Direct lead)
+- Sample tasks (2-3 per case) and notes (1-2 per case) seeded
+
+### Documentation
+- `IMPLEMENTATION_SPEC_V2.md` — added §1.5 Stage Enum Extension with Kanban column mapping table
+
+---
+
+## Testing Checklist
+
+| Test | Expected |
+|---|---|
+| `npx prisma migrate dev` | ✅ Clean — migration `20260220210312_v2_schema_upgrade` applied |
+| `npm run build` | ✅ Clean — no TypeScript errors |
+| `npx tsx scripts/seed.ts` | ✅ 5 cases seeded with tasks and notes |
+| SL download without approval | .docx served (previously returned 400) |
+| ASF download without approval | .docx served (previously returned 400) |
+| Offer upload with PartAndPart | Correctly stored as `PartAndPart` (previously coerced to `Repayment`) |
+| Existing API routes | No regressions — all routes still compile and respond |
+
+---
+
 ## Slice 3 — Multi-Variant Upload + Fee Comparison Panel
 
 **Status: COMPLETE** ✅
