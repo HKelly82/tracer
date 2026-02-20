@@ -17,6 +17,7 @@ interface IllustrationDoc {
   loanAmount: string | number
   arrangementFeeAddedToLoan: boolean
   confirmed: boolean
+  parseStatus?: string | null
 }
 
 interface IllustrationPanelProps {
@@ -170,6 +171,18 @@ export default function IllustrationPanel({
             </button>
           </div>
         </div>
+
+        {/* Parse failure / partial extraction banners */}
+        {illustration.parseStatus === "Failed" && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-[#E53E3E]">
+            <span className="font-medium">Extraction failed.</span> Please enter fields manually using Verify Fields.
+          </div>
+        )}
+        {illustration.parseStatus === "Partial" && (
+          <div className="p-3 bg-[#FFFAF0] border border-[#DD6B20] rounded-lg text-sm text-[#2D3748]">
+            <span className="font-medium">⚠ Some fields could not be extracted</span> — please review in Verify Fields.
+          </div>
+        )}
 
         {/* Fee-added banner — prompt second upload */}
         {hasFee && !isConfirmed && (

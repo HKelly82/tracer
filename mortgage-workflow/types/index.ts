@@ -44,6 +44,7 @@ export interface PrimaryAction {
 export interface CaseSummary {
   id: string
   clientName: string
+  lateNbSubmission?: boolean
   caseType: CaseType
   status: CaseStatus
   stage: Stage

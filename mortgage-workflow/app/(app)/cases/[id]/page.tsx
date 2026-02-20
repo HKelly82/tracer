@@ -13,6 +13,7 @@ import FeeComparisonPanel from "@/components/case/FeeComparisonPanel"
 import SuitabilityPanel from "@/components/case/SuitabilityPanel"
 import ASFPanel from "@/components/case/ASFPanel"
 import OfferPanel from "@/components/case/OfferPanel"
+import AuditSummary from "@/components/case/AuditSummary"
 import type { Stage } from "@/types"
 
 interface IllustrationRecord {
@@ -93,7 +94,8 @@ interface CaseData {
   asfDraft: ASFDraftRecord | null
   commission: CommissionRecord | null
   offer: OfferRecord | null
-  auditLog: { id: string; eventType: string; createdAt: string; oldValue: string | null; newValue: string | null; reason: string | null }[]
+  lateNbSubmission: boolean
+  auditLog: { id: string; eventType: string; createdAt: string; fieldKey?: string | null; oldValue: string | null; newValue: string | null; reason: string | null }[]
 }
 
 function isSuitabilityEnabled(
@@ -208,6 +210,11 @@ function CaseViewInner({ caseId }: { caseId: string }) {
           stageDueAt={data.stageDueAt}
           onRefresh={fetchCase}
         />
+        {data.lateNbSubmission && (
+          <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 border border-amber-300 text-amber-800 text-xs font-medium rounded">
+            ⚠ Submitted Late
+          </div>
+        )}
 
         {/* Two-column grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-6 mt-4">
@@ -341,24 +348,7 @@ function CaseViewInner({ caseId }: { caseId: string }) {
                 defaultOpen={false}
                 isActive={isAuditActive}
               >
-                {data.auditLog.length === 0 ? (
-                  <p className="text-sm text-[#A0AEC0]">No audit events yet.</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {data.auditLog.map((e) => (
-                      <li key={e.id} className="text-xs text-[#2D3748] border-l-2 border-[#E2E8F0] pl-2">
-                        <span className="font-medium">{e.eventType}</span>
-                        {e.oldValue && e.newValue && (
-                          <span className="text-[#A0AEC0]"> {e.oldValue} → {e.newValue}</span>
-                        )}
-                        {e.reason && <span className="text-[#A0AEC0]"> — {e.reason}</span>}
-                        <span className="block text-[#A0AEC0]">
-                          {new Date(e.createdAt).toLocaleString("en-GB")}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <AuditSummary events={data.auditLog} />
               </CollapsiblePanel>
             </div>
           </div>

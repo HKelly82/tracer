@@ -45,6 +45,17 @@ export async function PATCH(
   const { id } = await params
   const body = await request.json()
 
+  // Block direct mutation of protected date fields
+  const PROTECTED_FIELDS = ["applicationSubmittedAt", "nbSubmittedAt"]
+  for (const field of PROTECTED_FIELDS) {
+    if (field in body) {
+      return NextResponse.json(
+        { error: `${field} can only be changed via /api/cases/${id}/submission-date` },
+        { status: 400 }
+      )
+    }
+  }
+
   const updated = await prisma.case.update({
     where: { id },
     data: body,

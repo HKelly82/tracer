@@ -28,6 +28,7 @@ export async function GET() {
       priorityScore: calculatePriorityScore(c.stageDueAt),
       daysRemaining: getDaysRemaining(c.stageDueAt),
       daysOverdue: getDaysOverdue(c.stageDueAt),
+      lateNbSubmission: c.lateNbSubmission,
     }))
     .sort((a, b) => a.priorityScore - b.priorityScore)
 

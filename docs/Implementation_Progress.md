@@ -129,3 +129,45 @@ Tracks slice-by-slice progress for the mortgage adviser workflow tool.
 | Upload shows extracted fields | Manual |
 | Match/mismatch correctly detected | Manual |
 | Acknowledge logged in audit | Manual |
+
+---
+
+## Slice 7 — Audit & Compliance Hardening
+
+**Date completed:** 2026-02-20
+**Commit:** (pending)
+**Build:** ✅ Clean
+
+### Files created
+- `mortgage-workflow/prisma/migrations/20260220124535_add_late_nb_flag/` — schema migration
+- `mortgage-workflow/app/api/cases/[id]/submission-date/route.ts` — protected date override
+- `mortgage-workflow/components/case/AuditSummary.tsx` — expandable audit log component
+
+### Files modified
+- `mortgage-workflow/prisma/schema.prisma` — lateNbSubmission Boolean
+- `mortgage-workflow/lib/db/prisma.ts` — $extends middleware for immutable AuditLogEvent
+- `mortgage-workflow/app/api/cases/[id]/stage/route.ts` — NB late detection
+- `mortgage-workflow/app/api/cases/[id]/route.ts` — PATCH protected field guard
+- `mortgage-workflow/app/api/cases/route.ts` — lateNbSubmission in list
+- `mortgage-workflow/app/(app)/cases/[id]/page.tsx` — AuditSummary, late badge
+- `mortgage-workflow/app/(app)/dashboard/page.tsx` — Refresh button
+- `mortgage-workflow/components/dashboard/CaseRow.tsx` — Late NB badge
+- `mortgage-workflow/components/case/IllustrationPanel.tsx` — parse failure banners
+- `mortgage-workflow/types/index.ts` — lateNbSubmission on CaseSummary
+
+### Architectural decisions
+| Decision | Rationale |
+|---|---|
+| $extends instead of $use | Prisma v7 requires Client Extensions for query middleware |
+| Explicit select fields in submission-date | TypeScript can't infer dynamic select key type |
+
+### Testing checklist
+| Test | Result |
+|---|---|
+| Build passes | ✅ |
+| Protected PATCH returns 400 for date fields | Manual |
+| Submission date override creates audit event | Manual |
+| Late NB flag set after deadline | Manual |
+| AuditSummary expandable events | Manual |
+| Parse failure banners visible | Manual |
+| Dashboard refresh works | Manual |

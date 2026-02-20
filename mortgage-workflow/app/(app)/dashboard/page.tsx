@@ -10,6 +10,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const [cases, setCases] = useState<CaseSummary[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [showNewCase, setShowNewCase] = useState(false)
   const [newClientName, setNewClientName] = useState("")
   const [newCaseType, setNewCaseType] = useState<CaseType>("Remortgage")
@@ -55,12 +56,25 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold text-[#2D3748]">Case Dashboard</h1>
             <p className="text-sm text-[#A0AEC0] mt-0.5">Sorted by priority — overdue first</p>
           </div>
-          <button
-            onClick={() => setShowNewCase(true)}
-            className="px-4 py-2 text-sm font-medium bg-[#4A90D9] text-white rounded hover:bg-[#3a7bc8] transition-colors"
-          >
-            + New Case
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={async () => {
+                setRefreshing(true)
+                await fetchCases()
+                setRefreshing(false)
+              }}
+              disabled={refreshing}
+              className="px-3 py-2 text-sm font-medium text-[#4A90D9] border border-[#4A90D9] rounded hover:bg-blue-50 transition-colors disabled:opacity-50"
+            >
+              {refreshing ? "…" : "↻ Refresh"}
+            </button>
+            <button
+              onClick={() => setShowNewCase(true)}
+              className="px-4 py-2 text-sm font-medium bg-[#4A90D9] text-white rounded hover:bg-[#3a7bc8] transition-colors"
+            >
+              + New Case
+            </button>
+          </div>
         </div>
 
         {/* Cases table */}

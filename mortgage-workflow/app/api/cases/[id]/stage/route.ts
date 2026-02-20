@@ -1,6 +1,7 @@
 // POST /api/cases/[id]/stage — stage transition { action: string }
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
+import { prisma } from "@/lib/db/prisma"
 import { executeStageAction } from "@/lib/stage-engine/transitions"
 
 export async function POST(
@@ -20,6 +21,23 @@ export async function POST(
 
   try {
     await executeStageAction(id, action)
+
+    // After nb_submitted action: check if submission was late
+    if (action === "nb_submitted") {
+      const updated = await prisma.case.findUnique({
+        where: { id },
+        select: { nbSubmittedAt: true, nbDueAt: true },
+      })
+      if (updated?.nbSubmittedAt && updated?.nbDueAt) {
+        if (updated.nbSubmittedAt > updated.nbDueAt) {
+          await prisma.case.update({
+            where: { id },
+            data: { lateNbSubmission: true },
+          })
+        }
+      }
+    }
+
     return NextResponse.json({ ok: true })
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error"

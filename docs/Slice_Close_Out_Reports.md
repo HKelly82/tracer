@@ -132,3 +132,51 @@ Testing checklist
 | Mismatch state shows comparison table | Manual |
 | Acknowledge records audit event | Manual |
 | No offer state shows upload button | Manual |
+
+---
+
+## Slice 7 — Audit & Compliance Hardening
+
+**Date completed:** 2026-02-20
+**Commit:** (pending)
+**Build:** ✅ Clean
+
+### Files created
+- `prisma/migrations/20260220124535_add_late_nb_flag/migration.sql` — lateNbSubmission Boolean column
+- `app/api/cases/[id]/submission-date/route.ts` — protected date override with reason + DateOverridden audit
+- `components/case/AuditSummary.tsx` — expandable audit log panel, reverse chronological, human-readable labels
+
+### Files modified
+- `prisma/schema.prisma` — added `lateNbSubmission Boolean @default(false)` to Case model
+- `lib/db/prisma.ts` — added `$extends` middleware to block delete/update on AuditLogEvent
+- `app/api/cases/[id]/stage/route.ts` — added late NB detection after nb_submitted action
+- `app/api/cases/[id]/route.ts` — block applicationSubmittedAt + nbSubmittedAt in PATCH body
+- `app/api/cases/route.ts` — include lateNbSubmission in case list response
+- `app/(app)/cases/[id]/page.tsx` — wired AuditSummary, added lateNbSubmission to CaseData, late badge
+- `app/(app)/dashboard/page.tsx` — added Refresh button with spinner
+- `components/dashboard/CaseRow.tsx` — added Late NB badge next to client name
+- `components/case/IllustrationPanel.tsx` — parse failure (Failed/Partial) banners in extracted state
+- `types/index.ts` — added lateNbSubmission to CaseSummary
+
+### Architectural decisions
+| Decision | Rationale |
+|---|---|
+| `$extends` instead of `$use` | Prisma v7 uses Client Extensions API; `$use` is deprecated |
+| Computed select with explicit fields in submission-date route | TypeScript cannot infer type from dynamic `{ [field]: true }` select |
+| Prisma generate required after schema + migration | Generated client types must be regenerated after schema changes |
+
+### Known issues / deferred
+- Immutable audit log middleware ($extends) is in-process only — direct DB access can still mutate rows; full protection requires RLS policies in Supabase
+- lateNbSubmission flag is set at nb_submitted time; if submission date is later corrected via submission-date route, the flag is not automatically updated
+
+### Testing checklist
+| Test | Result |
+|---|---|
+| npm run build | ✅ |
+| PATCH /api/cases/[id] with applicationSubmittedAt returns 400 | Manual |
+| POST /api/cases/[id]/submission-date updates date with audit event | Manual |
+| nb_submitted after deadline sets lateNbSubmission=true | Manual |
+| Late NB badge shows on dashboard and case view | Manual |
+| AuditSummary shows events in reverse chronological order | Manual |
+| IllustrationPanel shows Failed/Partial banners | Manual |
+| Dashboard Refresh button reloads cases | Manual |

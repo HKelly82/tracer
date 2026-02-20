@@ -24,6 +24,7 @@ model Case {
   rateExpiryAt              DateTime?
   offerExpiryAt             DateTime?
   sharedCase                Boolean        @default(false)
+  lateNbSubmission          Boolean        @default(false)
   createdAt                 DateTime       @default(now())
   updatedAt                 DateTime       @updatedAt
 

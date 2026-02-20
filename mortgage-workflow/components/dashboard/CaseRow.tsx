@@ -67,7 +67,14 @@ export default function CaseRow({ row, onChaseModal, onRefresh }: CaseRowProps) 
         <td className={`w-1 p-0 ${heatmap}`} />
 
         {/* Client name */}
-        <td className="px-4 py-3 text-sm font-bold text-[#2D3748]">{row.clientName}</td>
+        <td className="px-4 py-3 text-sm font-bold text-[#2D3748]">
+          {row.clientName}
+          {row.lateNbSubmission && (
+            <span className="ml-2 px-1.5 py-0.5 bg-amber-100 border border-amber-300 text-amber-800 text-xs font-medium rounded">
+              Late NB
+            </span>
+          )}
+        </td>
 
         {/* Stage */}
         <td className="px-4 py-3">
