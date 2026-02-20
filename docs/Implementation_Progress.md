@@ -1,5 +1,27 @@
 # Implementation Progress
 
+## Repo Flatten — Housekeeping
+
+**Status: COMPLETE** ✅
+**Date completed:** 2026-02-20
+
+---
+
+## What was done
+
+### Directory Structure
+- Moved all files from `mortgage-workflow/` subdirectory up to the repository root (`Tracer/`)
+- Removed orphan `docs/` directory at the old root level (contained outdated copies of CLAUDE_CODE_PROMPTS.md, Implementation_Progress.md, MasterGovernancePrompt.md, Slice_Close_Out_Reports.md, and a stray image)
+- Removed placeholder 12-byte `README.md` at old root (app's own README.md now serves as repo README)
+- Added `.claude/` to `.gitignore`
+- All 105 files moved with 100% git rename detection — full history preserved
+- `npm install` + `prisma generate` + `npm run build` all pass at new root
+
+### Vercel Action Required
+- If Vercel project has "Root Directory" set to `mortgage-workflow`, update it to `.` (or clear it) in Vercel dashboard under Settings > General > Root Directory
+
+---
+
 ## V2 Slice 0 — Schema Migration + Bug Fixes
 
 **Status: COMPLETE** ✅
@@ -298,7 +320,7 @@
 
 ### To run the app
 ```bash
-cd mortgage-workflow
+cd Tracer
 cp .env.local .env.local  # already populated
 npm run dev
 # → http://localhost:3000

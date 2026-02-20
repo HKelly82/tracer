@@ -21,7 +21,7 @@ Testing checklist
 ## Slice 4 — Suitability Letter Generator
 
 **Date completed:** 2026-02-20
-**Commit:** (pending)
+**Commit:** `87ab53e`
 **Build:** ✅ Clean
 
 ### Files created
@@ -62,7 +62,7 @@ Testing checklist
 ## Slice 5 — ASF Generator
 
 **Date completed:** 2026-02-20
-**Commit:** (pending)
+**Commit:** `0afb012`
 **Build:** ✅ Clean
 
 ### Files created
@@ -101,7 +101,7 @@ Testing checklist
 ## Slice 6 — Offer Upload + Comparison
 
 **Date completed:** 2026-02-20
-**Commit:** (pending)
+**Commit:** `2f5ec1b`
 **Build:** ✅ Clean
 
 ### Files created
@@ -138,7 +138,7 @@ Testing checklist
 ## Slice 7 — Audit & Compliance Hardening
 
 **Date completed:** 2026-02-20
-**Commit:** (pending)
+**Commit:** `a8ace59`
 **Build:** ✅ Clean
 
 ### Files created
@@ -183,10 +183,29 @@ Testing checklist
 
 ---
 
+## Repo Flatten — Housekeeping
+
+**Date completed:** 2026-02-20
+**Commit:** `aa4be10`, `b24fd76`
+**Build:** ✅ Clean
+
+### Summary
+- Moved all files from `mortgage-workflow/` subdirectory to repository root
+- Removed orphan `docs/` at old root (outdated copies of governance + progress docs, stray image)
+- Removed placeholder `README.md` at old root
+- Added `.claude/` to `.gitignore`
+- 105 files moved with 100% git rename detection — full history preserved
+- npm install + prisma generate + npm run build all verified at new root
+
+### Action Required
+- If Vercel "Root Directory" is set to `mortgage-workflow`, change it to `.` in Vercel dashboard
+
+---
+
 ## V2 Slice 0 — Schema Migration + Bug Fixes
 
 **Date completed:** 2026-02-20
-**Commit:** (pending)
+**Commit:** `674a3f2`
 **Build:** ✅ Clean
 **Migration:** `20260220210312_v2_schema_upgrade`
 
