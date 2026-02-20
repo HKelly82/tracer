@@ -180,3 +180,118 @@ Testing checklist
 | AuditSummary shows events in reverse chronological order | Manual |
 | IllustrationPanel shows Failed/Partial banners | Manual |
 | Dashboard Refresh button reloads cases | Manual |
+
+---
+
+## V2 Slice 0 — Schema Migration + Bug Fixes
+
+**Date completed:** 2026-02-20
+**Commit:** (pending)
+**Build:** ✅ Clean
+**Migration:** `20260220210312_v2_schema_upgrade`
+
+### 1. What Was Delivered
+- Prisma schema extended with all v2 models, enums, and fields
+- Stage enum extended with 4 new values (Lead, ClientResponse, LenderProcessing, Offered)
+- 3 backend bug fixes (PartAndPart type union, SL download gate, ASF download gate)
+- 2 bug verifications (staleDueToInputChange already fixed, .env.txt never committed)
+- Seed script updated with v2 fields, new-stage cases, sample tasks, and notes
+- IMPLEMENTATION_SPEC_V2.md updated with §1.5 Stage Enum Extension
+
+### 2. Files Created
+- `prisma/migrations/20260220210312_v2_schema_upgrade/migration.sql`
+
+### 3. Files Modified
+| File | Change |
+|---|---|
+| `prisma/schema.prisma` | 3 new enums, 4 new Stage values, 5 new AuditEventType values, 4 new Case fields, markedComplete on SuitabilityDraft + ASFDraft, 4 new models |
+| `app/api/offer/[caseId]/route.ts` | Added PartAndPart to repayment method type union |
+| `app/api/suitability/[caseId]/download/route.ts` | Removed approvedByUser and staleDueToInputChange gates |
+| `app/api/asf/[caseId]/download/route.ts` | Removed approvedByUser gate |
+| `scripts/seed.ts` | v2 fields on existing cases, 2 new cases (Lead + ClientResponse stages), sample tasks + notes |
+| `docs/IMPLEMENTATION_SPEC_V2.md` | Added §1.5 Stage Enum Extension with Kanban column mapping table |
+| `docs/Implementation_Progress.md` | Appended V2 Slice 0 progress |
+
+### 4. New Dependencies Added
+- None
+
+### 5. New Environment Variables Required
+- None
+
+### 6. PRD Acceptance Criteria Status
+
+| Criteria | Status |
+|---|---|
+| WaitingOn, LeadSource, TaskStatus enums created | ✅ Fully satisfied |
+| Case model extended with waitingOn, leadSource, clientSummary, feeArrangement | ✅ Fully satisfied |
+| Task, Note, Person, DocumentCheck models created | ✅ Fully satisfied |
+| AuditEventType extended with 5 new values | ✅ Fully satisfied |
+| markedComplete added to SuitabilityDraft + ASFDraft | ✅ Fully satisfied |
+| Stage enum extended with Lead, ClientResponse, LenderProcessing, Offered | ✅ Fully satisfied |
+| PartAndPart handling fixed in offer route | ✅ Fully satisfied |
+| Approval gates removed from SL + ASF download routes | ✅ Fully satisfied |
+| staleDueToInputChange verified | ✅ Already implemented in v1 Slice 4 |
+| .env.txt verified | ✅ Not in git history, covered by .gitignore |
+| Seed script updated | ✅ Fully satisfied |
+| Migration runs clean | ✅ Fully satisfied |
+| Build passes | ✅ Fully satisfied |
+
+### 7. Compliance Validation
+
+| Check | Status |
+|---|---|
+| FCA references intact | ✅ No FCA-related code modified |
+| Risk warnings intact | ✅ No warning text modified |
+| No unintended PII persistence | ✅ New models store case data only, consistent with v1 pattern |
+| No security regression | ✅ Auth middleware unchanged. Audit log immutability ($extends) unchanged. |
+| No placeholder content where prohibited | ✅ No placeholder content introduced |
+
+### 8. Manual Testing Checklist
+
+| Test | Expected |
+|---|---|
+| `npx prisma migrate dev` runs clean | Migration applied without errors |
+| `npm run build` passes | No TypeScript or compilation errors |
+| `npx tsx scripts/seed.ts` completes | 5 cases with tasks and notes seeded |
+| GET /api/cases returns all 5 seeded cases | Cases include waitingOn and leadSource fields |
+| GET /api/cases/[id] for seed-case-4 | Returns Lead stage case with clientSummary |
+| GET /api/suitability/[caseId]/download (unapproved draft) | Returns .docx (previously 400) |
+| GET /api/asf/[caseId]/download (unapproved draft) | Returns .docx (previously 400) |
+| Upload offer PDF with PartAndPart repayment | confirmedRepaymentMethod = "PartAndPart" |
+| Existing v1 cases (Research, DIP, AwaitingNB stages) | Still load correctly, no regressions |
+
+### 9. Known Gaps
+- `approvedByUser` field retained on SuitabilityDraft and ASFDraft for backward compatibility. Will be deprecated in favour of `markedComplete` when UI is updated in Slice 3.
+- Stale draft check removed from SL download route along with approval gate. The stale banner remains a UI-layer concern (Slice 3).
+
+### 10. Technical Debt Introduced
+- Two boolean fields serve similar purposes: `approvedByUser` (v1) and `markedComplete` (v2) on both SuitabilityDraft and ASFDraft. Plan to deprecate `approvedByUser` in Slice 3 when the UI is refactored.
+- Stage enum now has 12 values including legacy mappings. Legacy values will become unused as v1 cases are closed. Cleanup migration can remove them later.
+
+### 11. Follow-Up Tasks
+- Slice 1: Kanban dashboard must use the column mapping table from §1.5 to group both new and legacy stage values
+- Slice 3: SuitabilityPanel and ASFPanel UI refactor — replace approval flow with "mark complete" toggle using the new `markedComplete` field
+
+### Architectural Decisions
+
+| Decision | Rationale |
+|---|---|
+| Additive Stage enum (no removals) | v1 data uses existing values. Migration would require understanding each case's true business state. Legacy values map to Kanban columns in Slice 1. |
+| markedComplete alongside approvedByUser | Clean v2 semantics without breaking v1 code that references approvedByUser. Deprecated in Slice 3. |
+| Stale check removed from download route | v2 philosophy: "suggest, never block". Stale warning is a UI concern, not a download gate. |
+| Seed script cleans tasks/notes on re-run | Prevents duplicate task/note accumulation from repeated seeding. Uses deleteMany with seed-case- prefix filter. |
+
+### Decision Log
+
+**Decision V2-001**
+
+| Field | Value |
+|---|---|
+| Decision ID | V2-001 |
+| Type | Architecture |
+| Context | V2 introduces new stages (Lead, ClientResponse, LenderProcessing, Offered) but v1 data uses existing stage values (ChaseClient, PostDIPChase, NBSubmitted). Existing cases cannot be migrated without understanding their actual business state. |
+| Decision | Add new Stage enum values additively. Do NOT remove or rename existing values. Kanban UI (Slice 1) maps both new and legacy values into columns using a mapping table documented in IMPLEMENTATION_SPEC_V2.md §1.5. |
+| Alternatives Considered | (A) Rename existing values via data migration — risky, requires understanding each case's true state. (B) Defer all stage changes to Slice 1 — separates schema from the slice that consumes it, less cohesive. |
+| Consequences (Short Term) | Stage enum has 12 values (8 legacy + 4 new). Some values are semantically overlapping (ChaseClient ≈ ClientResponse). |
+| Consequences (Long Term) | Once all v1 cases are closed/completed, legacy values become unused. Can be removed in a future cleanup migration. |
+| Reversible | Yes |
