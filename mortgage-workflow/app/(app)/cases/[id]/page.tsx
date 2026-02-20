@@ -11,6 +11,7 @@ import StatusBadge from "@/components/ui/StatusBadge"
 import IllustrationPanel from "@/components/case/IllustrationPanel"
 import FeeComparisonPanel from "@/components/case/FeeComparisonPanel"
 import SuitabilityPanel from "@/components/case/SuitabilityPanel"
+import ASFPanel from "@/components/case/ASFPanel"
 import type { Stage } from "@/types"
 
 interface IllustrationRecord {
@@ -48,6 +49,24 @@ interface SuitabilityDraftRecord {
   approvedByUser: boolean
 }
 
+interface ASFDraftRecord {
+  id: string
+  vulnerableClient: boolean
+  sourceOfBusiness: string | null
+  purposeOfLoan: string | null
+  borrowerType: string | null
+  accountNumber: string | null
+  approvedByUser: boolean
+}
+
+interface CommissionRecord {
+  id: string
+  helenSplitPercent: string | number
+  eileenSplitPercent: string | number
+  splitRuleApplied: string
+  feeWaived: boolean
+}
+
 interface CaseData {
   id: string
   clientName: string
@@ -58,6 +77,8 @@ interface CaseData {
   illustrations: IllustrationRecord[]
   feeDisclosure: FeeDisclosure | null
   suitabilityDraft: SuitabilityDraftRecord | null
+  asfDraft: ASFDraftRecord | null
+  commission: CommissionRecord | null
   auditLog: { id: string; eventType: string; createdAt: string; oldValue: string | null; newValue: string | null; reason: string | null }[]
 }
 
@@ -280,7 +301,13 @@ function CaseViewInner({ caseId }: { caseId: string }) {
                 isActive={isAsfActive}
               >
                 {suitabilityEnabled ? (
-                  <p className="text-sm text-[#A0AEC0]">ASF generation — available in Slice 5.</p>
+                  <ASFPanel
+                    caseId={data.id}
+                    clientName={data.clientName}
+                    existingDraft={data.asfDraft}
+                    existingCommission={data.commission}
+                    onRefresh={fetchCase}
+                  />
                 ) : (
                   <LockedPanelState message={lockMessage} />
                 )}

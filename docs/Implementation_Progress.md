@@ -64,3 +64,37 @@ Tracks slice-by-slice progress for the mortgage adviser workflow tool.
 | Approve sets approvedByUser=true | Manual |
 | Download streams valid .docx file | Manual |
 | Stale banner shown when staleDueToInputChange=true | Manual |
+
+---
+
+## Slice 5 — ASF Generator
+
+**Date completed:** 2026-02-20
+**Commit:** (pending)
+**Build:** ✅ Clean
+
+### Files created
+- `mortgage-workflow/lib/documents/asf-generator.ts` — 6-table .docx layout, calculateCommission (DefaultHelen100 / Shared7030 / ManualOverride)
+- `mortgage-workflow/components/case/ASFPanel.tsx` — 3-state panel with commission override form
+
+### Files modified
+- `mortgage-workflow/app/api/asf/[caseId]/route.ts` — replaced 501 stub; GET, POST, PATCH commission override
+- `mortgage-workflow/app/api/asf/[caseId]/approve/route.ts` — replaced 501 stub
+- `mortgage-workflow/app/api/asf/[caseId]/download/route.ts` — replaced 501 stub
+- `mortgage-workflow/app/(app)/cases/[id]/page.tsx` — added ASFDraftRecord, CommissionRecord, wired ASFPanel
+
+### Architectural decisions
+| Decision | Rationale |
+|---|---|
+| Prisma accessor `aSFDraft` | Prisma camelCase rules for all-caps prefix — verified in generated index.d.ts |
+| calculateCommission preserves ManualOverride on regeneration | Prevents accidental reset of adviser-specified split |
+| Suitability approval gate | ASF should only be generated after recommendation is approved |
+
+### Testing checklist
+| Test | Result |
+|---|---|
+| Build passes | ✅ |
+| Default commission 100% Helen | Manual |
+| 70/30 on sharedCase | Manual |
+| Commission override logged | Manual |
+| Approve + download | Manual |

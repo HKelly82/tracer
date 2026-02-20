@@ -56,3 +56,42 @@ Testing checklist
 | Field override marks draft stale | Manual |
 | Approve unlocks download | Manual |
 | Download streams .docx | Manual |
+
+---
+
+## Slice 5 — ASF Generator
+
+**Date completed:** 2026-02-20
+**Commit:** (pending)
+**Build:** ✅ Clean
+
+### Files created
+- `lib/documents/asf-generator.ts` — 6-table Word layout, calculateCommission logic
+- `components/case/ASFPanel.tsx` — 3-state panel (form / approval gate / approved+download) with commission override
+
+### Files modified
+- `app/api/asf/[caseId]/route.ts` — replaced 501 stub (GET + POST + PATCH commission override)
+- `app/api/asf/[caseId]/approve/route.ts` — replaced 501 stub
+- `app/api/asf/[caseId]/download/route.ts` — replaced 501 stub
+- `app/(app)/cases/[id]/page.tsx` — added ASFDraftRecord, CommissionRecord interfaces, wired ASFPanel
+
+### Architectural decisions
+| Decision | Rationale |
+|---|---|
+| Prisma accessor is `aSFDraft` not `asFDraft` | Prisma converts ASFDraft model name via camelCase rules — verified in generated index.d.ts |
+| calculateCommission preserves ManualOverride on POST regeneration | Prevents commission split reset when adviser regenerates ASF |
+| Suitability letter approval required as gate | Ensures ASF is not generated before the core recommendation document is approved |
+| `null` → `undefined` for oldValue in writeAuditLog | writeAuditLog params type uses string | undefined |
+
+### Known issues / deferred
+- None
+
+### Testing checklist
+| Test | Result |
+|---|---|
+| npm run build | ✅ |
+| Default commission 100% Helen on non-shared case | Manual |
+| 70/30 split on sharedCase=true | Manual |
+| Commission override logged with reason | Manual |
+| Approve unlocks download | Manual |
+| Download streams valid .docx | Manual |
