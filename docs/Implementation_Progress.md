@@ -98,3 +98,34 @@ Tracks slice-by-slice progress for the mortgage adviser workflow tool.
 | 70/30 on sharedCase | Manual |
 | Commission override logged | Manual |
 | Approve + download | Manual |
+
+---
+
+## Slice 6 — Offer Upload + Comparison
+
+**Date completed:** 2026-02-20
+**Commit:** (pending)
+**Build:** ✅ Clean
+
+### Files created
+- `mortgage-workflow/components/case/OfferPanel.tsx` — 3-state panel (no offer / match / mismatch+acknowledge)
+
+### Files modified
+- `mortgage-workflow/app/api/offer/[caseId]/route.ts` — replaced 501 stub; upload+extract+compare
+- `mortgage-workflow/app/api/offer/[caseId]/acknowledge/route.ts` — replaced 501 stub; mismatch acknowledgement
+- `mortgage-workflow/app/(app)/cases/[id]/page.tsx` — added OfferRecord, offer field, OfferPanel wiring
+
+### Architectural decisions
+| Decision | Rationale |
+|---|---|
+| Reuse extractWithRegex for offer PDFs | Same ESIS pattern set; offer format similar enough |
+| Graceful extraction failure | Offer templates vary — null fields fall back to illustration values |
+| No stage gate for offer | Optional document per spec |
+
+### Testing checklist
+| Test | Result |
+|---|---|
+| Build passes | ✅ |
+| Upload shows extracted fields | Manual |
+| Match/mismatch correctly detected | Manual |
+| Acknowledge logged in audit | Manual |

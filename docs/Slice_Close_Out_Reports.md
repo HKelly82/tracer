@@ -95,3 +95,40 @@ Testing checklist
 | Commission override logged with reason | Manual |
 | Approve unlocks download | Manual |
 | Download streams valid .docx | Manual |
+
+---
+
+## Slice 6 — Offer Upload + Comparison
+
+**Date completed:** 2026-02-20
+**Commit:** (pending)
+**Build:** ✅ Clean
+
+### Files created
+- `components/case/OfferPanel.tsx` — 3-state panel (no offer / match / mismatch + acknowledge)
+
+### Files modified
+- `app/api/offer/[caseId]/route.ts` — replaced 501 stub; GET returns offer, POST uploads+extracts+compares
+- `app/api/offer/[caseId]/acknowledge/route.ts` — replaced 501 stub; POST acknowledges mismatch with audit log
+- `app/(app)/cases/[id]/page.tsx` — added OfferRecord interface, `offer` to CaseData, wired OfferPanel; extended IllustrationRecord with initialRatePercent + termYears
+
+### Architectural decisions
+| Decision | Rationale |
+|---|---|
+| extractWithRegex reused for offer PDF | Same ESIS pattern format; only 4 fields needed, no vision fallback required |
+| Extraction failure falls through gracefully | Offer may use different templates — null values fallback to illustration values |
+| Offer upload does not gate stage progression | Per spec — offer is optional and supplementary |
+| OfferMismatchAcknowledged audit event on acknowledge | Provides compliance trail for any rate/loan/term discrepancies |
+
+### Known issues / deferred
+- No manual field correction UI for offer (extracted values can differ from actual offer if regex misses) — could add inline override in future slice
+
+### Testing checklist
+| Test | Result |
+|---|---|
+| npm run build | ✅ |
+| Upload offer PDF shows correct extracted fields | Manual |
+| Match state shown when fields align | Manual |
+| Mismatch state shows comparison table | Manual |
+| Acknowledge records audit event | Manual |
+| No offer state shows upload button | Manual |

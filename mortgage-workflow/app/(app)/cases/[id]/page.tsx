@@ -12,6 +12,7 @@ import IllustrationPanel from "@/components/case/IllustrationPanel"
 import FeeComparisonPanel from "@/components/case/FeeComparisonPanel"
 import SuitabilityPanel from "@/components/case/SuitabilityPanel"
 import ASFPanel from "@/components/case/ASFPanel"
+import OfferPanel from "@/components/case/OfferPanel"
 import type { Stage } from "@/types"
 
 interface IllustrationRecord {
@@ -25,6 +26,8 @@ interface IllustrationRecord {
   confirmed: boolean
   portability: boolean
   overpaymentPercent: number | null
+  initialRatePercent: string | number
+  termYears: number
 }
 
 interface FeeDisclosure {
@@ -67,6 +70,16 @@ interface CommissionRecord {
   feeWaived: boolean
 }
 
+interface OfferRecord {
+  id: string
+  confirmedRatePercent: string | number
+  confirmedLoanAmount: string | number
+  confirmedTermYears: number
+  matchesIllustration: boolean
+  mismatchFields: string[]
+  acknowledgedByUser: boolean
+}
+
 interface CaseData {
   id: string
   clientName: string
@@ -79,6 +92,7 @@ interface CaseData {
   suitabilityDraft: SuitabilityDraftRecord | null
   asfDraft: ASFDraftRecord | null
   commission: CommissionRecord | null
+  offer: OfferRecord | null
   auditLog: { id: string; eventType: string; createdAt: string; oldValue: string | null; newValue: string | null; reason: string | null }[]
 }
 
@@ -266,7 +280,12 @@ function CaseViewInner({ caseId }: { caseId: string }) {
                 defaultOpen={false}
                 isActive={isOfferActive}
               >
-                <p className="text-sm text-[#A0AEC0]">Offer upload and comparison — available in Slice 6.</p>
+                <OfferPanel
+                  caseId={data.id}
+                  existingOffer={data.offer}
+                  primaryIllustration={primary ?? null}
+                  onRefresh={fetchCase}
+                />
               </CollapsiblePanel>
             </div>
 
