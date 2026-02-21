@@ -3,6 +3,14 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db/prisma"
 import { executeStageAction } from "@/lib/stage-engine/transitions"
+import { addCalendarDays } from "@/lib/stage-engine/timer"
+import type { Stage } from "@/types"
+
+const VALID_STAGES: Stage[] = [
+  "Lead", "Research", "ChaseClient", "ClientResponse", "DIP",
+  "PostDIPChase", "AwaitingNB", "NBSubmitted", "LenderProcessing",
+  "Offered", "Closed", "Completed",
+]
 
 export async function POST(
   request: Request,
@@ -13,13 +21,48 @@ export async function POST(
 
   const { id } = await params
   const body = await request.json()
-  const { action } = body
+  const { action, stage } = body
 
   if (!action) {
     return NextResponse.json({ error: "action is required" }, { status: 400 })
   }
 
   try {
+    // stage_override: direct stage set for drag-and-drop moves
+    if (action === "stage_override") {
+      if (!stage || !VALID_STAGES.includes(stage)) {
+        return NextResponse.json({ error: "Valid stage is required for stage_override" }, { status: 400 })
+      }
+
+      const existing = await prisma.case.findUnique({ where: { id }, select: { stage: true } })
+      if (!existing) {
+        return NextResponse.json({ error: "Case not found" }, { status: 404 })
+      }
+
+      const now = new Date()
+      await prisma.case.update({
+        where: { id },
+        data: {
+          stage,
+          stageStartedAt: now,
+          stageDueAt: addCalendarDays(now, 7),
+          lastActionAt: now,
+        },
+      })
+
+      await prisma.auditLogEvent.create({
+        data: {
+          caseId: id,
+          eventType: "StageChanged",
+          oldValue: existing.stage,
+          newValue: stage,
+          reason: "Manual stage override (drag-and-drop)",
+        },
+      })
+
+      return NextResponse.json({ ok: true })
+    }
+
     await executeStageAction(id, action)
 
     // After nb_submitted action: check if submission was late

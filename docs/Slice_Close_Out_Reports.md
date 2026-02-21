@@ -314,3 +314,124 @@ Testing checklist
 | Consequences (Short Term) | Stage enum has 12 values (8 legacy + 4 new). Some values are semantically overlapping (ChaseClient ≈ ClientResponse). |
 | Consequences (Long Term) | Once all v1 cases are closed/completed, legacy values become unused. Can be removed in a future cleanup migration. |
 | Reversible | Yes |
+
+---
+
+## V2 Slice 1 — Kanban Dashboard
+
+**Date completed:** 2026-02-21
+**Commit:** `1ef0253`
+**Build:** ✅ Clean
+
+### 1. What Was Delivered
+- Replaced v1 priority-sorted table dashboard with 8-column Kanban board
+- "Waiting on" as primary visual signal on every card
+- Active/monitoring zone separation per column
+- Drag-and-drop stage transitions with `stage_override` fallback
+- Full lead intake modal (client name, case type, lead source, client summary, fee arrangement)
+- Client-side search, summary badges, refresh
+
+### 2. Files Created
+| File | Purpose |
+|---|---|
+| `components/dashboard/KanbanBoard.tsx` | 8-column horizontal scroll container with drag-and-drop |
+| `components/dashboard/KanbanColumn.tsx` | Single column with active/monitoring zones |
+| `components/dashboard/CaseCard.tsx` | Draggable card with waiting-on, client name, case type, time-in-stage |
+| `components/dashboard/NewCaseModal.tsx` | Full lead intake modal |
+| `components/dashboard/DashboardHeader.tsx` | Title, summary badges, search, refresh, new case button |
+| `components/dashboard/WaitingOnLegend.tsx` | Horizontal legend bar |
+| `components/ui/WaitingOnBadge.tsx` | Reusable waiting-on indicator |
+| `components/ui/CaseTypeBadge.tsx` | Reusable case type pill |
+
+### 3. Files Modified
+| File | Change |
+|---|---|
+| `app/(app)/dashboard/page.tsx` | Replaced table with KanbanBoard + DashboardHeader + WaitingOnLegend |
+| `app/api/cases/route.ts` | GET: added waitingOn/leadSource/clientSummary/feeArrangement. POST: accepts new fields, defaults to Lead stage |
+| `app/api/cases/[id]/stage/route.ts` | Added stage_override action for drag-and-drop |
+| `types/index.ts` | Added v2 Stage values, WaitingOn, LeadSource types, extended CaseSummary, added v2 AuditEventType values |
+| `lib/stage-engine/priority.ts` | Added getPrimaryAction entries for new stages |
+| `components/ui/StatusBadge.tsx` | Added labels/colours for Lead, ClientResponse, LenderProcessing, Offered |
+| `app/globals.css` | Added --color-dashboard-neutral-v2 |
+
+### 4. Files Deleted
+- `components/dashboard/CaseTable.tsx`
+- `components/dashboard/CaseRow.tsx`
+- `components/dashboard/PriorityBadge.tsx`
+- `components/dashboard/DueDateTooltip.tsx`
+- `app/(app)/page.tsx`
+
+### 5. New Dependencies Added
+- `lucide-react` (icons)
+
+### 6. New Environment Variables Required
+- None
+
+### 7. PRD Acceptance Criteria Status
+
+| Criteria | Status |
+|---|---|
+| Kanban board with 8 stage columns | ✅ Fully satisfied |
+| WaitingOn as primary visual signal on every card | ✅ Fully satisfied |
+| Active/monitoring zone separation per column | ✅ Fully satisfied |
+| Drag-and-drop stage transitions | ✅ Fully satisfied |
+| stage_override action for non-standard transitions | ✅ Fully satisfied |
+| New case modal with lead source, client summary, fee arrangement | ✅ Fully satisfied |
+| Client-side search | ✅ Fully satisfied |
+| Summary badges (action needed, overdue) | ✅ Fully satisfied |
+| v2 types aligned with Prisma schema | ✅ Fully satisfied |
+| API returns v2 fields | ✅ Fully satisfied |
+| Build passes | ✅ Fully satisfied |
+
+### 8. Compliance Validation
+
+| Check | Status |
+|---|---|
+| FCA references intact | ✅ No FCA-related code modified |
+| Risk warnings intact | ✅ No warning text modified |
+| No unintended PII persistence | ✅ UI-only change, no new data storage |
+| No security regression | ✅ Auth checks preserved on all API routes |
+| No placeholder content where prohibited | ✅ No placeholder content introduced |
+
+### 9. Manual Testing Checklist
+
+| Test | Expected |
+|---|---|
+| Board renders 8 columns | Lead through Completed |
+| Seeded cases distribute by stage | Cases appear in correct columns |
+| Active zone above monitoring divider | waitingOn=Me and overdue cases at top |
+| Monitoring zone at reduced opacity | 68% opacity |
+| Drag card between columns | Stage updates, card moves |
+| Drag card backward (e.g., DIP to Research) | stage_override fires, card moves |
+| New Case modal fields | Client name, case type, lead source toggle, client summary, fee arrangement |
+| New case appears in Lead column | Default stage is Lead |
+| Search filters by client name | Real-time client-side filtering |
+| Summary badges correct | Action needed + overdue counts |
+| Click card navigates to case | /cases/[id] route |
+| Refresh reloads cases | Cases re-fetched |
+
+### 10. Known Gaps
+- "Next task" display on CaseCard shows nothing — will be populated in Slice 4 (Task system)
+- No optimistic UI update during drag-and-drop — card moves after API response + refresh
+
+### 11. Technical Debt Introduced
+- None
+
+### 12. Follow-Up Tasks
+- Slice 2: Stage-aware case view rendering
+- Slice 4: Task system populates "next task" on CaseCard
+
+### Decision Log
+
+**Decision V2-002**
+
+| Field | Value |
+|---|---|
+| Decision ID | V2-002 |
+| Type | Architecture |
+| Context | Drag-and-drop can move cards to any column, but not all column-to-column moves map to existing stage transition functions (e.g., moving backward, or skipping stages). |
+| Decision | Add a `stage_override` action to the stage route that directly sets the stage + writes an audit event. This handles any drag-and-drop move not covered by existing transition functions. |
+| Alternatives Considered | (A) Only allow forward transitions via drag — too restrictive, Helen needs flexibility. (B) Create transition functions for every possible move — excessive, most won't be used. |
+| Consequences (Short Term) | stage_override bypasses SLA calculations. Due date defaults to +7 days from now. |
+| Consequences (Long Term) | Acceptable — Helen can manually override due dates. Stage engine will be extended in future slices. |
+| Reversible | Yes |

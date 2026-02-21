@@ -29,6 +29,10 @@ export async function GET() {
       daysRemaining: getDaysRemaining(c.stageDueAt),
       daysOverdue: getDaysOverdue(c.stageDueAt),
       lateNbSubmission: c.lateNbSubmission,
+      waitingOn: c.waitingOn,
+      leadSource: c.leadSource,
+      clientSummary: c.clientSummary,
+      feeArrangement: c.feeArrangement,
     }))
     .sort((a, b) => a.priorityScore - b.priorityScore)
 
@@ -40,7 +44,7 @@ export async function POST(request: Request) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const body = await request.json()
-  const { clientName, caseType } = body
+  const { clientName, caseType, leadSource, clientSummary, feeArrangement, waitingOn } = body
 
   if (!clientName?.trim()) {
     return NextResponse.json({ error: "clientName is required" }, { status: 400 })
@@ -53,6 +57,11 @@ export async function POST(request: Request) {
     data: {
       clientName: clientName.trim(),
       caseType: caseType ?? "Remortgage",
+      stage: "Lead",
+      waitingOn: waitingOn ?? "Me",
+      leadSource: leadSource ?? "Direct",
+      clientSummary: clientSummary ?? null,
+      feeArrangement: feeArrangement ?? "£200 advice + £150 admin",
       stageDueAt,
     },
   })

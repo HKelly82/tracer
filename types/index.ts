@@ -1,12 +1,16 @@
 // Shared TypeScript types
 
 export type Stage =
+  | "Lead"
   | "Research"
   | "ChaseClient"
+  | "ClientResponse"
   | "DIP"
   | "PostDIPChase"
   | "AwaitingNB"
   | "NBSubmitted"
+  | "LenderProcessing"
+  | "Offered"
   | "Closed"
   | "Completed"
 
@@ -24,6 +28,10 @@ export type CaseType =
 
 export type RepaymentMethod = "Repayment" | "InterestOnly" | "PartAndPart"
 
+export type WaitingOn = "Me" | "Client" | "Lender" | "Passive"
+
+export type LeadSource = "Eileen" | "Direct"
+
 export type AuditEventType =
   | "StageChanged"
   | "FieldConfirmed"
@@ -35,6 +43,11 @@ export type AuditEventType =
   | "CaseClosed"
   | "CaseReopened"
   | "CommissionOverridden"
+  | "TaskCompleted"
+  | "TaskSkipped"
+  | "NoteAdded"
+  | "WaitingOnChanged"
+  | "DocumentCheckCompleted"
 
 export interface PrimaryAction {
   label: string
@@ -55,6 +68,10 @@ export interface CaseSummary {
   priorityScore: number
   daysRemaining: number
   daysOverdue: number
+  waitingOn: WaitingOn
+  leadSource: LeadSource
+  clientSummary: string | null
+  feeArrangement: string | null
 }
 
 export interface AuditLogEventRecord {

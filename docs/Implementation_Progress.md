@@ -22,6 +22,70 @@
 
 ---
 
+## V2 Slice 1 — Kanban Dashboard
+
+**Status: COMPLETE** ✅
+**Date completed:** 2026-02-21
+
+---
+
+## What was built
+
+### Dashboard Replacement
+- Replaced v1 priority-sorted table (`CaseTable.tsx`, `CaseRow.tsx`, `PriorityBadge.tsx`, `DueDateTooltip.tsx`) with an 8-column Kanban board
+- Columns: Lead, Research, Client Response, DIP / Application, NB Submission, Lender Processing, Offered, Completed
+- Each column has active zone (waitingOn=Me or overdue) and monitoring zone (68% opacity)
+- Drag-and-drop stage transitions via HTML5 drag API — uses dedicated transition actions where available, `stage_override` fallback for arbitrary moves
+
+### New UI Components
+- `KanbanBoard.tsx` — Horizontal scrolling container, manages drag state, dispatches stage transitions
+- `KanbanColumn.tsx` — Single column with active/monitoring zone separation
+- `CaseCard.tsx` — Draggable card with WaitingOnBadge, client name, CaseTypeBadge, time-in-stage
+- `DashboardHeader.tsx` — Title, summary badges (action needed / overdue), search input, refresh, new case button
+- `WaitingOnLegend.tsx` — Horizontal legend showing all 4 WaitingOn indicators
+- `NewCaseModal.tsx` — Full lead intake: client name, case type, lead source toggle, client summary, fee arrangement
+- `WaitingOnBadge.tsx` — Reusable icon + label + colour for Me/Client/Lender/Passive
+- `CaseTypeBadge.tsx` — Reusable icon + label for case types
+
+### Type System Updates
+- `types/index.ts` — Added v2 Stage values (Lead, ClientResponse, LenderProcessing, Offered), WaitingOn type, LeadSource type, extended CaseSummary with waitingOn/leadSource/clientSummary/feeArrangement, added v2 AuditEventType values
+
+### API Extensions
+- `GET /api/cases` — Now includes waitingOn, leadSource, clientSummary, feeArrangement in response
+- `POST /api/cases` — Accepts leadSource, clientSummary, feeArrangement, waitingOn; defaults new cases to Lead stage
+- `POST /api/cases/[id]/stage` — Added `stage_override` action for direct stage setting (drag-and-drop)
+
+### StatusBadge + Priority Engine
+- `StatusBadge.tsx` — Added labels/colours for Lead, ClientResponse, LenderProcessing, Offered
+- `priority.ts` — Added getPrimaryAction entries for all new stages
+
+### New Dependency
+- `lucide-react` — icon library
+
+### Styling
+- `globals.css` — Added `--color-dashboard-neutral-v2: #EEF1F6`
+
+---
+
+## Testing Checklist
+
+| Test | Expected |
+|---|---|
+| `npm run build` | ✅ Clean — no TypeScript errors |
+| Board renders 8 columns | Lead through Completed |
+| Seeded cases distribute by stage | Cases appear in correct columns |
+| Active zone above monitoring divider | waitingOn=Me and overdue cases at top |
+| Monitoring zone at reduced opacity | 68% opacity for non-active cases |
+| Drag card between columns | Stage updates, card moves after refresh |
+| New Case modal | All fields: client name, case type, lead source toggle, client summary, fee arrangement |
+| New case defaults to Lead stage | Appears in Lead column |
+| Search filters by client name | Client-side real-time filtering |
+| Summary badges correct | Action needed + overdue counts match |
+| Clicking card navigates to case | `/cases/[id]` route |
+| Refresh button re-fetches cases | Cases reload |
+
+---
+
 ## V2 Slice 0 — Schema Migration + Bug Fixes
 
 **Status: COMPLETE** ✅

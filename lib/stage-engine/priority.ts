@@ -23,12 +23,16 @@ export function getRowBackground(stageDueAt: Date, status: CaseStatus): string {
 
 export function getPrimaryAction(stage: Stage): PrimaryAction {
   switch (stage) {
-    case "Research":     return { label: "Complete Research", action: "research_complete" }
-    case "ChaseClient":  return { label: "Chase Client",      action: "open_chase_modal" }
-    case "DIP":          return { label: "Complete DIP",      action: "dip_complete" }
-    case "PostDIPChase": return { label: "Chase Client",      action: "open_chase_modal" }
-    case "AwaitingNB":   return { label: "Submit to NB",      action: "nb_submitted" }
-    case "NBSubmitted":  return { label: "View Case",         action: "open_case" }
-    default:             return { label: "View Case",         action: "open_case" }
+    case "Lead":              return { label: "Open Case",          action: "open_case" }
+    case "Research":          return { label: "Complete Research",  action: "research_complete" }
+    case "ChaseClient":       return { label: "Chase Client",      action: "open_chase_modal" }
+    case "ClientResponse":    return { label: "Open Case",         action: "open_case" }
+    case "DIP":               return { label: "Complete DIP",      action: "dip_complete" }
+    case "PostDIPChase":      return { label: "Chase Client",      action: "open_chase_modal" }
+    case "AwaitingNB":        return { label: "Submit to NB",      action: "nb_submitted" }
+    case "NBSubmitted":       return { label: "View Case",         action: "open_case" }
+    case "LenderProcessing":  return { label: "Open Case",         action: "open_case" }
+    case "Offered":           return { label: "Open Case",         action: "open_case" }
+    default:                  return { label: "View Case",         action: "open_case" }
   }
 }
